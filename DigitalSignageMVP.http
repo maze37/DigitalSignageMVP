@@ -1,6 +1,101 @@
-@DigitalSignageMVP_HostAddress = http://localhost:5041
+### DigitalSignageMVP API Tests
+@baseUrl = http://localhost:5000
+# или https://localhost:5001 если используешь HTTPS
 
-GET {{DigitalSignageMVP_HostAddress}}/weatherforecast/
+### 1. Health Check
+GET {{baseUrl}}/api/mediafiles
 Accept: application/json
 
-###
+### 2. Создать плейлист
+POST {{baseUrl}}/api/playlists
+Content-Type: application/json
+
+{
+  "name": "Лучшие видео"
+}
+
+### 3. Получить все плейлисты
+GET {{baseUrl}}/api/playlists
+Accept: application/json
+
+### 4. Получить конкретный плейлист
+GET {{baseUrl}}/api/playlists/1
+Accept: application/json
+
+### 5. Загрузить тестовый файл (нужен файл test.jpg в папке)
+POST {{baseUrl}}/api/mediafiles/upload
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="test.jpg"
+Content-Type: image/jpeg
+
+< ./test.jpg
+--WebAppBoundary--
+
+### 6. Получить все медиафайлы
+GET {{baseUrl}}/api/mediafiles
+Accept: application/json
+
+### 7. Получить медиафайлы плейлиста 1
+GET {{baseUrl}}/api/mediafiles?playlistId=1
+Accept: application/json
+
+### 8. Добавить медиафайл в плейлист
+PATCH {{baseUrl}}/api/playlists/1/media/1/add
+
+### 9. Получить плейлист с медиафайлами (проверить что файл добавился)
+GET {{baseUrl}}/api/playlists/1
+Accept: application/json
+
+### 10. Удалить медиафайл из плейлиста
+PATCH {{baseUrl}}/api/playlists/1/media/1/remove
+
+### 11. Обновить имя плейлиста
+PATCH {{baseUrl}}/api/playlists/1
+Content-Type: application/json
+
+{
+  "name": "Обновленное имя плейлиста"
+}
+
+### 12. Удалить медиафайл
+DELETE {{baseUrl}}/api/mediafiles/1
+
+### 13. Удалить плейлист
+DELETE {{baseUrl}}/api/playlists/1
+
+### 14. Тест валидации файлов (неверный формат)
+POST {{baseUrl}}/api/mediafiles/upload
+Content-Type: multipart/form-data; boundary=BadFileBoundary
+
+--BadFileBoundary
+Content-Disposition: form-data; name="file"; filename="test.exe"
+Content-Type: application/octet-stream
+
+< ./test.exe
+--BadFileBoundary--
+
+### 15. Тест создания плейлиста с пустым именем
+POST {{baseUrl}}/api/playlists
+Content-Type: application/json
+
+{
+  "name": ""
+}
+
+### 16. Тест дублирования имени плейлиста
+POST {{baseUrl}}/api/playlists
+Content-Type: application/json
+
+{
+  "name": "Лучшие видео"
+}
+
+### 17. Проверка несуществующего ресурса
+GET {{baseUrl}}/api/mediafiles/999999
+Accept: application/json
+
+### 18. Проверка несуществующего плейлиста
+GET {{baseUrl}}/api/playlists/999999
+Accept: application/json
