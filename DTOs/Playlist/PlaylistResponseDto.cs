@@ -1,3 +1,5 @@
+using System;
+
 namespace DigitalSignageMVP.DTOs.Playlist;
 
 public class PlaylistResponseDto
