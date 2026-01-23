@@ -11,3 +11,4 @@ public class Playlist
 
     public List<MediaFile> MediaFiles { get; set; } = new();
 }
+
