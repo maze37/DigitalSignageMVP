@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace DigitalSignageMVP.Services;
 
 public static class FileTypeValidator

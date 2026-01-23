@@ -1,3 +1,5 @@
+using System;
+
 namespace DigitalSignageMVP.DTOs.MediaFile;
 
 public class MediaFileSimpleDto 

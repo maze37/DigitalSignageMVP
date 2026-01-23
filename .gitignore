@@ -1,2 +1,52 @@
-obj/
-bin/
+## Rider
+.idea/
+*.sln.iml
+*.csproj.iml
+*.userprefs
+*.pidb
+*.csproj.user
+*.unityproj.user
+_ReSharper.Caches/
+_ReSharper.CoreClr/
+
+## Build & Obj
+[Bb]in/
+[Oo]bj/
+out/
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]uild/
+
+## NuGet
+.nuget/
+*.nupkg
+nuget.exe
+packages/
+**/[Pp]ackages/*
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Logs
+*.log
+*.tlog
+
+## Test results
+TestResult.xml
+*.trx
+
+## VS
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+EOF

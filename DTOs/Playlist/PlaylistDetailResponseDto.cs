@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using DigitalSignageMVP.DTOs.MediaFile;
 
 namespace DigitalSignageMVP.DTOs.Playlist;
