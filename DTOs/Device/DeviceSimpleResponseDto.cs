@@ -1,16 +1,15 @@
 using System;
 
-namespace DigitalSignageMVP.Models;
+namespace DigitalSignageMVP.DTOs.Device;
 
-public class Device
+public class DeviceSimpleResponseDto
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string DeviceKey { get; set; } = string.Empty;
     public string IpAddress { get; set; } = string.Empty;
     public DateTime LastSeen { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
-
-    public int? PlaylistId { get; set; } // Fk
-    public Playlist? Playlist { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public int? PlaylistId { get; set; }
+    public string? PlaylistName { get; set; }
 }

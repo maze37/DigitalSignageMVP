@@ -22,6 +22,42 @@ namespace DigitalSignageMVP.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("DigitalSignageMVP.Models.Device", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeviceKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastSeen")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("PlaylistId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlaylistId");
+
+                    b.ToTable("Devices");
+                });
+
             modelBuilder.Entity("DigitalSignageMVP.Models.MediaFile", b =>
                 {
                     b.Property<int>("Id")
@@ -75,6 +111,15 @@ namespace DigitalSignageMVP.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Playlists");
+                });
+
+            modelBuilder.Entity("DigitalSignageMVP.Models.Device", b =>
+                {
+                    b.HasOne("DigitalSignageMVP.Models.Playlist", "Playlist")
+                        .WithMany()
+                        .HasForeignKey("PlaylistId");
+
+                    b.Navigation("Playlist");
                 });
 
             modelBuilder.Entity("DigitalSignageMVP.Models.MediaFile", b =>

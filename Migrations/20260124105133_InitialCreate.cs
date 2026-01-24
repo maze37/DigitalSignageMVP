@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DigitalSignageMVP.Migrations
 {
     /// <inheritdoc />
-    public partial class SwitchToCleanArch : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -24,6 +24,29 @@ namespace DigitalSignageMVP.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Playlists", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Devices",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    DeviceKey = table.Column<string>(type: "text", nullable: false),
+                    IpAddress = table.Column<string>(type: "text", nullable: false),
+                    LastSeen = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    PlaylistId = table.Column<int>(type: "integer", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Devices", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Devices_Playlists_PlaylistId",
+                        column: x => x.PlaylistId,
+                        principalTable: "Playlists",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -49,6 +72,11 @@ namespace DigitalSignageMVP.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Devices_PlaylistId",
+                table: "Devices",
+                column: "PlaylistId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_MediaFiles_Name",
                 table: "MediaFiles",
                 column: "Name",
@@ -63,6 +91,9 @@ namespace DigitalSignageMVP.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Devices");
+
             migrationBuilder.DropTable(
                 name: "MediaFiles");
 
