@@ -10,7 +10,7 @@ public class Device
     public string IpAddress { get; set; } = string.Empty;
     public DateTime LastSeen { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
-
-    public int? PlaylistId { get; set; } // Fk
+    
+    public int? PlaylistId { get; set; }
     public Playlist? Playlist { get; set; }
 }
