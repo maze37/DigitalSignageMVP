@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using DigitalSignageMVP.Data;
 using DigitalSignageMVP.DTOs.Device;
+using DigitalSignageMVP.DTOs.MediaFile;
+using DigitalSignageMVP.DTOs.Playlist;
 using DigitalSignageMVP.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -120,4 +122,80 @@ public class DevicesController : ControllerBase
             new { id = device.Id }, response);
     }
     
+    [HttpPost("{deviceKey}/heartbeat")]
+    public async Task<ActionResult<HeartbeatResponseDto>> Heartbeat(
+        string deviceKey,
+        [FromBody] HeartbeatRequestDto request)
+    {
+        var device = await _context.Devices
+            .Include(d => d.Playlist)
+            .ThenInclude(p => p!.MediaFiles)
+            .FirstOrDefaultAsync(d => d.DeviceKey == deviceKey);
+        
+        if (device == null)
+        {
+            device = new Device
+            {
+                DeviceKey = deviceKey,
+                Name = $"Device_{deviceKey}",
+                IpAddress = request.IpAddress ?? "unknown",
+                LastSeen = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Devices.Add(device);
+            await _context.SaveChangesAsync();
+
+            return Ok(new HeartbeatResponseDto
+            {
+                ServerTime = DateTime.UtcNow,
+                HasPlaylistAssigned = false,
+                PlaylistChanged = false,
+                Playlist = null
+            });
+        }
+        
+        device.LastSeen = DateTime.UtcNow;
+        if (!string.IsNullOrEmpty(request.IpAddress))
+        {
+            device.IpAddress = request.IpAddress;
+        }
+        await _context.SaveChangesAsync();
+        
+        var response = new HeartbeatResponseDto
+        {
+            ServerTime = DateTime.UtcNow,
+            HasPlaylistAssigned = device.PlaylistId.HasValue,
+            PlaylistChanged = false,
+            Playlist = null
+        };
+        
+        if (device.Playlist != null)
+        {
+            bool playlistChanged = request.CurrentPlaylistId != device.Playlist.Id;
+            response.PlaylistChanged = playlistChanged;
+
+            if (playlistChanged || request.CurrentPlaylistId == null)
+            {
+                var orderedFiles = device.Playlist.MediaFiles?
+                    .OrderBy(mf => mf.Id)
+                    .ToList() ?? new List<MediaFile>();
+
+                response.Playlist = new PlaylistDetailResponseDto
+                {
+                    Id = device.Playlist.Id,
+                    Name = device.Playlist.Name,
+                    CreatedAt = device.Playlist.CreatedAt,
+                    MediaFiles = orderedFiles.Select(mf => new MediaFileSimpleDto
+                    {
+                        Id = mf.Id,
+                        Name = mf.Name,
+                        Url = mf.FilePath,
+                        UploadedAt = mf.UploadedAt
+                    }).ToList()
+                };
+            }
+        }
+
+        return Ok(response);
+    }
 }
