@@ -1,14 +1,8 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using DigitalSignageMVP.Data;
 using DigitalSignageMVP.DTOs.MediaFile;
-using DigitalSignageMVP.Models;
-using DigitalSignageMVP.Services;
+using DigitalSignageMVP.Services.MediaFiles;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace DigitalSignageMVP.Controllers;
 
@@ -16,116 +10,51 @@ namespace DigitalSignageMVP.Controllers;
 [Route("api/[controller]")]
 public class MediaFilesController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IMediaFileService _mediaFileService;
 
-    public MediaFilesController(AppDbContext context)
+    public MediaFilesController(IMediaFileService mediaFileService)
     {
-        _context = context;
+        _mediaFileService = mediaFileService;
     }
-    
+
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<MediaFileResponseDto>>> GetMediaFiles(
-        [FromQuery] string? name = null,
-        [FromQuery] int? playlistId = null)
+    public async Task<ActionResult<IEnumerable<MediaFileResponseDto>>> Get(
+        [FromQuery] string? name,
+        [FromQuery] int? playlistId)
     {
-        var query = _context.MediaFiles.AsQueryable();
-        
-        if (!string.IsNullOrWhiteSpace(name))
-            query = query.Where(f => f.Name.Contains(name));
-        
-        if (playlistId.HasValue)
-            query = query.Where(f => f.PlaylistId == playlistId.Value);
-        
-        var files = await query.ToListAsync();
-        
-        var response = files.Select(f => new MediaFileResponseDto()
-        {
-            Id  = f.Id,
-            Name = f.Name,
-            Url = $"{Request.Scheme}://{Request.Host}/{f.FilePath}",
-            UploadedAt = f.UploadedAt,
-            PlaylistId = f.PlaylistId
-        }).ToList();
-        
-        return Ok(response);
+        var result = await _mediaFileService.GetAsync(name, playlistId);
+        return Ok(result);
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<MediaFileResponseDto>> GetMediaFile(int id)
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<MediaFileResponseDto>> GetById(int id)
     {
-        var file = await _context.MediaFiles.FindAsync(id);
-        if (file == null) return NotFound();
-        
-        return Ok(new MediaFileResponseDto()
-        {
-            Id = file.Id,
-            Name = file.Name,
-            Url = $"{Request.Scheme}://{Request.Host}/{file.FilePath}",
-            UploadedAt = file.UploadedAt,
-            PlaylistId = file.PlaylistId
-        });
+        var result = await _mediaFileService.GetByIdAsync(id);
+        if (result == null)
+            return NotFound();
+
+        return Ok(result);
     }
-    
+
     [HttpPost("upload")]
     [Consumes("multipart/form-data")]
-    public async Task<ActionResult<MediaFileResponseDto>> UploadMediaFile([FromForm] UploadMediaFileDto request)
+    public async Task<ActionResult<MediaFileResponseDto>> Upload(
+        [FromForm] UploadMediaFileDto request)
     {
-        if (request.File == null || request.File.Length == 0)
-            return BadRequest("File is empty");
-        
-        var extension = Path.GetExtension(request.File.FileName).ToLower();
-        
-        var allowedExtensions = FileTypeValidator.GetAllowedExtensions();
-        if (!FileTypeValidator.IsExtensionAllowed(extension))
-        {
-            return BadRequest("Invalid file extension. " +
-                              "Allowed extensions are: " + string.Join(", ", allowedExtensions));
-        }
-        
-        var name =  Path.GetFileNameWithoutExtension(request.File.FileName);
-        var fileName = $"{Guid.NewGuid()}{extension}";
-        
-        var folder =  Path.Combine("wwwroot", "uploads");
-        Directory.CreateDirectory(folder);
-        var filePath = Path.Combine(folder, fileName);
-        
-        using var stream = new FileStream(filePath, FileMode.Create);
-        await request.File.CopyToAsync(stream);
+        var result = await _mediaFileService.UploadAsync(request);
 
-        var mediaFile = new MediaFile
-        {
-            Name = name,
-            FilePath = $"uploads/{fileName}",
-            UploadedAt = DateTime.UtcNow,
-        };
-        
-        _context.MediaFiles.Add(mediaFile);
-        await _context.SaveChangesAsync();
-
-        var response = new MediaFileResponseDto
-        {
-            Id = mediaFile.Id,
-            Name = mediaFile.Name,
-            Url = $"{Request.Scheme}://{Request.Host}/{mediaFile.FilePath}",
-            UploadedAt = mediaFile.UploadedAt,
-            PlaylistId = mediaFile.PlaylistId
-        };
-        
-        return CreatedAtAction(nameof(GetMediaFile), new { id = mediaFile.Id }, response);
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = result.Id },
+            result);
     }
-    
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteMediaFile(int id)
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
     {
-        var mediaFile = await _context.MediaFiles.FindAsync(id);
-        if (mediaFile == null) return NotFound();
-        
-        var fullPath = Path.Combine("wwwroot", "uploads", mediaFile.FilePath);
-        if (System.IO.File.Exists(fullPath))
-            System.IO.File.Delete(fullPath);
-        
-        _context.MediaFiles.Remove(mediaFile);
-        await _context.SaveChangesAsync();
+        var deleted = await _mediaFileService.DeleteAsync(id);
+        if (!deleted)
+            return NotFound();
 
         return NoContent();
     }

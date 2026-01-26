@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DigitalSignageMVP.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260124105133_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260126093201_UpdAllModels")]
+    partial class UpdAllModels
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -69,11 +69,6 @@ namespace DigitalSignageMVP.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("FilePath")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(128)
@@ -84,6 +79,10 @@ namespace DigitalSignageMVP.Migrations
 
                     b.Property<DateTime>("UploadedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
